@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
+import 'package:gymnestic/features/auth/presentation/controllers/login_binding.dart';
+import 'package:gymnestic/features/auth/presentation/pages/login_screen.dart';
 import 'package:gymnestic/features/onboarding/controllers/onboarding_binding.dart';
 import 'package:gymnestic/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:gymnestic/features/splash/controller/splash_binding.dart';
@@ -18,6 +20,12 @@ class AppPages {
       page: () => const OnboardingScreen(),
       binding: OnboardingBinding(),
       transition: .leftToRight,
+    ),
+    GetPage(
+      name: AppRoutes.login,
+      page: () => const LoginScreen(),
+      binding: LoginBinding(),
+      transition: .rightToLeft,
     ),
   ];
 }

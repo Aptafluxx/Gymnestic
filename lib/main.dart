@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gymnestic/core/routes/app_pages.dart';
-import 'package:gymnestic/core/routes/app_routes.dart';
-import 'package:gymnestic/core/theme/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+import 'firebase_options.dart';
+import 'core/theme/app_theme.dart';
+import 'core/routes/app_pages.dart';
+import 'core/routes/app_routes.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const Gymnestic());
 }
 
@@ -14,8 +21,8 @@ class Gymnestic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      title: 'GYMNESTIC',
       debugShowCheckedModeBanner: false,
-      title: "Gymnestic",
       theme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
       initialRoute: AppRoutes.splash,

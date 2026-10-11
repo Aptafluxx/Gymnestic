@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/core/widgets/shake_widget.dart';
 
 class SignupController extends GetxController {
@@ -75,7 +76,7 @@ class SignupController extends GetxController {
     isLoading.value = true;
     Future.delayed(const Duration(seconds: 2), () {
       isLoading.value = false;
-      // Get.offAllNamed(AppRoutes.home);
+      Get.offAllNamed(AppRoutes.home);
     });
   }
 

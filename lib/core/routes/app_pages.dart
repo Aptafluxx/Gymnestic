@@ -4,6 +4,8 @@ import 'package:gymnestic/features/auth/presentation/controllers/login_binding.d
 import 'package:gymnestic/features/auth/presentation/controllers/signup_binding.dart';
 import 'package:gymnestic/features/auth/presentation/pages/login_screen.dart';
 import 'package:gymnestic/features/auth/presentation/pages/signup_screen.dart';
+import 'package:gymnestic/features/home/controller/home_binding.dart';
+import 'package:gymnestic/features/home/presentation/home_screen.dart';
 import 'package:gymnestic/features/onboarding/controllers/onboarding_binding.dart';
 import 'package:gymnestic/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:gymnestic/features/splash/controller/splash_binding.dart';
@@ -33,6 +35,12 @@ class AppPages {
       name: AppRoutes.signup,
       page: () => const SignupScreen(),
       binding: SignupBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.home,
+      page: () => const HomeScreen(),
+      binding: HomeBinding(),
       transition: .rightToLeft,
     ),
   ];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/features/auth/presentation/widgets/forgot_password_dialog.dart';
 
 import '../../../../core/widgets/shake_widget.dart';
@@ -61,7 +62,7 @@ class LoginController extends GetxController {
     isLoading.value = true;
     Future.delayed(const Duration(seconds: 2), () {
       isLoading.value = false;
-      // Get.offAllNamed(AppRoutes.home);
+      Get.offAllNamed(AppRoutes.home);
     });
   }
 

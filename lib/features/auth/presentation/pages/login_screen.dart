@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/core/widgets/shake_widget.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -140,7 +141,9 @@ class LoginScreen extends GetView<LoginController> {
                   const SizedBox(height: 44),
 
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Get.offAllNamed(AppRoutes.signup);
+                    },
                     child: Text(
                       'Have an Account? Login',
                       style: textTheme.bodyMedium?.copyWith(

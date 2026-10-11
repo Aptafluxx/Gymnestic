@@ -8,9 +8,14 @@ class HomeScreen extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.backgroundBlack,
-      body: Center(child: Text("Welcome, Home")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: .center,
+          children: [SizedBox(height: 50, width: 50, child: Text("Tap"))],
+        ),
+      ),
     );
   }
 }

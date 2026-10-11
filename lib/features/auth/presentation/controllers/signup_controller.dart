@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/errors/auth_exceptions.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
+import 'package:gymnestic/core/widgets/app_snackbar.dart';
 import 'package:gymnestic/core/widgets/shake_widget.dart';
+import 'package:gymnestic/features/auth/domain/usecases/signup_usecase.dart';
 
 class SignupController extends GetxController {
+  final SignUpUseCase _signUpUseCase = Get.find<SignUpUseCase>();
+
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -25,7 +30,7 @@ class SignupController extends GetxController {
   bool get isUsernameValid => username.value.trim().length >= 3;
   bool get isEmailValid => GetUtils.isEmail(email.value.trim());
   bool get isPasswordValid => password.value.length >= 6;
-  bool get isFormValid => isEmailValid && isPasswordValid;
+  bool get isFormValid => isUsernameValid && isEmailValid && isPasswordValid;
 
   String? get usernameError {
     if (!isUsernameTouched.value || username.value.isEmpty) return null;
@@ -64,7 +69,7 @@ class SignupController extends GetxController {
     isPasswordObscured.value = !isPasswordObscured.value;
   }
 
-  void onSignup() {
+  Future<void> onSignup() async {
     if (!isFormValid) {
       isUsernameTouched.value = true;
       isEmailTouched.value = true;
@@ -74,10 +79,26 @@ class SignupController extends GetxController {
     }
 
     isLoading.value = true;
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
+    try {
+      await _signUpUseCase(
+        username: username.value.trim(),
+        email: email.value.trim(),
+        password: password.value,
+      );
+      AppSnackbar.success('Success', 'Your account has been created.');
       Get.offAllNamed(AppRoutes.home);
-    });
+    } on AuthException catch (exception) {
+      shakeKey.currentState?.shake();
+      AppSnackbar.error('Sign up failed', exception.message);
+    } catch (_) {
+      shakeKey.currentState?.shake();
+      AppSnackbar.error(
+        'Sign up failed',
+        'Something went wrong. Please try again.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   @override

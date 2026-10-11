@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/errors/auth_exceptions.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
+import 'package:gymnestic/core/widgets/app_snackbar.dart';
+import 'package:gymnestic/features/auth/domain/usecases/login_usecase.dart';
 import 'package:gymnestic/features/auth/presentation/widgets/forgot_password_dialog.dart';
 
 import '../../../../core/widgets/shake_widget.dart';
 
 class LoginController extends GetxController {
+  final LoginUseCase _loginUseCase = Get.find<LoginUseCase>();
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -51,7 +56,7 @@ class LoginController extends GetxController {
     isPasswordObscured.value = !isPasswordObscured.value;
   }
 
-  void onLogin() {
+  Future<void> onLogin() async {
     if (!isFormValid) {
       isEmailTouched.value = true;
       isPasswordTouched.value = true;
@@ -60,10 +65,25 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
+    try {
+      await _loginUseCase(
+        email: email.value.trim(),
+        password: password.value,
+      );
+      AppSnackbar.success('Success', 'You are now signed in.');
       Get.offAllNamed(AppRoutes.home);
-    });
+    } on AuthException catch (exception) {
+      shakeKey.currentState?.shake();
+      AppSnackbar.error('Sign in failed', exception.message);
+    } catch (_) {
+      shakeKey.currentState?.shake();
+      AppSnackbar.error(
+        'Sign in failed',
+        'Something went wrong. Please try again.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void onForgotPassword() {

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/errors/auth_exceptions.dart';
+import '../../domain/usecases/reset_password_usecase.dart';
+
 class ForgotPasswordController extends GetxController {
+  final ResetPasswordUseCase _resetPasswordUseCase =
+      Get.find<ResetPasswordUseCase>();
+
   final emailController = TextEditingController();
 
   final RxString email = ''.obs;
@@ -38,34 +44,12 @@ class ForgotPasswordController extends GetxController {
     errorMessage.value = '';
 
     try {
-      // final auth = FirebaseAuth.instance;
-      // await auth.sendPasswordResetEmail(email: email.value.trim());
-
+      await _resetPasswordUseCase(email: email.value.trim());
       isEmailSent.value = true;
-    } catch (e) {
-      // Map Firebase error codes to friendly explanations
-      // switch (e.code) {
-      //   case 'user-not-found':
-      //     errorMessage.value =
-      //         'No account found with this email. Please check your spelling.';
-      //     break;
-      //   case 'invalid-email':
-      //     errorMessage.value = 'The email address format is invalid.';
-      //     break;
-      //   case 'network-request-failed':
-      //     errorMessage.value =
-      //         'Network error. Please check your internet connection.';
-      //     break;
-      //   case 'too-many-requests':
-      //     errorMessage.value = 'Too many attempts. Please wait a few minutes before trying again.';
-      //     break;
-      //   case 'user-disabled':
-      //     errorMessage.value =
-      //         'This account has been disabled. Please contact support.';
-      //     break;
-      //   default:
-      //     errorMessage.value = e.message ?? 'An unexpected error occurred.';
-      // }
+    } on AuthException catch (exception) {
+      errorMessage.value = exception.message;
+    } catch (_) {
+      errorMessage.value = 'Something went wrong. Please try again.';
     } finally {
       isLoading.value = false;
     }

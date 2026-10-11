@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
+import 'core/bindings/initial_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ class Gymnestic extends StatelessWidget {
       themeMode: ThemeMode.dark,
       initialRoute: AppRoutes.splash,
       getPages: AppPages.pages,
+      initialBinding: InitialBinding(),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/features/auth/presentation/widgets/forgot_password_dialog.dart';
 
 import '../../../../core/widgets/shake_widget.dart';
 
@@ -65,7 +66,7 @@ class LoginController extends GetxController {
   }
 
   void onForgotPassword() {
-    debugPrint('Navigating to Forgot Password');
+    Get.dialog(const ForgotPasswordDialog(), barrierDismissible: false);
   }
 
   @override

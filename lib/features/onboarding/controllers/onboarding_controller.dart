@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
+import 'package:gymnestic/core/services/preferences_service.dart';
 import 'package:gymnestic/features/onboarding/data/models/onboarding_item.dart';
 
 class OnboardingController extends GetxController {
+  final PreferencesService _prefs = Get.find<PreferencesService>();
   final PageController pageController = PageController();
   final RxInt currentPage = 0.obs;
 
@@ -26,13 +28,15 @@ class OnboardingController extends GetxController {
     currentPage.value = index;
   }
 
-  void nextPage() {
+  Future<void> nextPage() async {
     if (currentPage.value < items.length - 1) {
       pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
     } else {
+      await _prefs.setHasSeenOnboarding(true);
+
       Get.offAllNamed(AppRoutes.login);
     }
   }

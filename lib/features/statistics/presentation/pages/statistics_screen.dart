@@ -34,183 +34,207 @@ class StatisticsScreen extends GetView<StatisticsController> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 22),
         children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 105,
-                  height: 105,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const SizedBox(
-                        width: 92,
-                        height: 92,
-                        child: CircularProgressIndicator(
-                          value: .89,
-                          strokeWidth: 8,
-                          strokeCap: StrokeCap.round,
-                          backgroundColor: AppColors.grayDark,
-                          valueColor: AlwaysStoppedAnimation(
-                            AppColors.primaryRed,
+          Obx(
+            () => Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 105,
+                    height: 105,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 92,
+                          height: 92,
+                          child: CircularProgressIndicator(
+                            value: (controller.overallProgressPercentage / 100)
+                                .clamp(0.0, 1.0),
+                            strokeWidth: 8,
+                            strokeCap: StrokeCap.round,
+                            backgroundColor: AppColors.grayDark,
+                            valueColor: const AlwaysStoppedAnimation(
+                              AppColors.primaryRed,
+                            ),
                           ),
                         ),
-                      ),
-                      const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '89',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${controller.overallProgressPercentage.round()}',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'percent',
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: AppColors.grayLight,
+                            const Text(
+                              'percent',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: AppColors.grayLight,
+                              ),
                             ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Activity',
+                          style: TextStyle(
+                            color: AppColors.grayLighter,
+                            fontSize: 10,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${controller.completedActivity.value} / ${controller.totalActivity.value}',
+                          style: const TextStyle(
+                            color: AppColors.primaryRed,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Calories Burned',
+                          style: TextStyle(
+                            color: AppColors.grayLighter,
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${controller.caloriesBurned.value} KCAL',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 11),
+          Obx(
+            () => Row(
+              children: [
+                Expanded(
+                  child: _MetricCard(
+                    icon: Icons.directions_run_rounded,
+                    value:
+                        '${controller.runningDistanceKm.value.toStringAsFixed(0)} / ${controller.targetDistanceKm.value.toStringAsFixed(0)} Km',
+                    calories: '${controller.runningCaloriesBurned.value} KCAL',
                   ),
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Activity',
-                        style: TextStyle(
-                          color: AppColors.grayLighter,
-                          fontSize: 10,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '15 / 20',
-                        style: TextStyle(
-                          color: AppColors.primaryRed,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'Calories Burned',
-                        style: TextStyle(
-                          color: AppColors.grayLighter,
-                          fontSize: 10,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '50 KCAL',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MetricCard(
+                    icon: Icons.nightlight_round,
+                    value:
+                        '${controller.sleepHours.value} / ${controller.targetSleepHours.value} hrs',
+                    calories: '${controller.sleepCaloriesBurned.value} KCAL',
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 11),
-          const Row(
-            children: [
-              Expanded(
-                child: _MetricCard(
-                  icon: Icons.directions_run_rounded,
-                  value: '45 / 60 Km',
-                  calories: '25 KCAL',
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _MetricCard(
-                  icon: Icons.nightlight_round,
-                  value: '21 / 28 hrs',
-                  calories: '25 KCAL',
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 24),
           const SectionHeading(title: 'Monitoring', subtitle: 'Daily progress'),
           const SizedBox(height: 13),
-          Container(
+          SizedBox(
             height: 185,
-            padding: const EdgeInsets.fromLTRB(14, 17, 14, 12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceDark,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: BarChart(
-              BarChartData(
-                maxY: 12,
-                minY: 0,
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barTouchData: BarTouchData(enabled: false),
-                titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 22,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 ||
-                            index >= controller.weeklyActivity.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: Text(
-                            controller.weeklyActivity[index].day,
-                            style: const TextStyle(
-                              color: AppColors.grayLighter,
-                              fontSize: 9,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+            child: Obx(
+              () => Container(
+                padding: const EdgeInsets.fromLTRB(14, 17, 14, 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceDark,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                barGroups: List.generate(
-                  controller.weeklyActivity.length,
-                  (index) => BarChartGroupData(
-                    x: index,
-                    barRods: [
-                      BarChartRodData(
-                        toY: controller.weeklyActivity[index].value,
-                        width: 9,
-                        color: index == 0
-                            ? AppColors.primaryRed
-                            : AppColors.grayDark,
-                        borderRadius: BorderRadius.circular(5),
+                child: BarChart(
+                  BarChartData(
+                    maxY: 12,
+                    minY: 0,
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    barTouchData: BarTouchData(
+                      touchCallback: (event, response) {
+                        final index = response?.spot?.touchedBarGroupIndex;
+                        if (index != null) controller.selectDay(index);
+                      },
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                            null,
                       ),
-                    ],
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 22,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 ||
+                                index >= controller.weeklyData.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return SideTitleWidget(
+                              meta: meta,
+                              child: Text(
+                                controller.weeklyData[index].dayName,
+                                style: TextStyle(
+                                  color: controller.weeklyData[index].isSelected
+                                      ? AppColors.primaryRed
+                                      : AppColors.grayLighter,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    barGroups: List.generate(controller.weeklyData.length, (
+                      index,
+                    ) {
+                      final stat = controller.weeklyData[index];
+                      return BarChartGroupData(
+                        x: index,
+                        barRods: [
+                          BarChartRodData(
+                            toY: stat.value,
+                            width: 9,
+                            color: stat.isSelected
+                                ? AppColors.primaryRed
+                                : AppColors.grayDark,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ),

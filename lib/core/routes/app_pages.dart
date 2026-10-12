@@ -6,10 +6,9 @@ import 'package:gymnestic/features/auth/presentation/pages/login_screen.dart';
 import 'package:gymnestic/features/auth/presentation/pages/signup_screen.dart';
 import 'package:gymnestic/features/dashboard/presentation/controllers/dashboard_binding.dart';
 import 'package:gymnestic/features/dashboard/presentation/pages/dashboard_shell_screen.dart';
-import 'package:gymnestic/features/workout/presentation/controllers/workout_details_binding.dart';
-import 'package:gymnestic/features/workout/presentation/pages/workout_details_screen.dart';
+import 'package:gymnestic/features/workouts/presentation/controllers/workout_details_binding.dart';
+import 'package:gymnestic/features/workouts/presentation/pages/workout_details_screen.dart';
 import 'package:gymnestic/features/articles/presentation/controllers/articles_binding.dart';
-import 'package:gymnestic/features/articles/presentation/controllers/article_details_binding.dart';
 import 'package:gymnestic/features/articles/presentation/pages/articles_screen.dart';
 import 'package:gymnestic/features/articles/presentation/pages/article_details_screen.dart';
 import 'package:gymnestic/features/profile/presentation/controllers/profile_binding.dart';
@@ -68,7 +67,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.articleDetails,
       page: () => const ArticleDetailsScreen(),
-      binding: ArticleDetailsBinding(),
+      binding: ArticlesBinding(),
       transition: .rightToLeft,
     ),
     GetPage(

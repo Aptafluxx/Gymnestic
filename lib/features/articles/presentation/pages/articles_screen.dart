@@ -4,6 +4,7 @@ import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/core/theme/app_colors.dart';
 import 'package:gymnestic/core/widgets/gym_image.dart';
 import 'package:gymnestic/core/widgets/section_heading.dart';
+import 'package:gymnestic/features/articles/data/models/article_model.dart';
 import 'package:gymnestic/features/articles/presentation/controllers/articles_controller.dart';
 import 'package:gymnestic/features/dashboard/presentation/controllers/dashboard_controller.dart';
 
@@ -34,12 +35,16 @@ class ArticlesScreen extends GetView<ArticlesController> {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 20),
         children: [
-          SizedBox(
-            height: 245,
-            child: PageView.builder(
-              itemCount: 3,
-              onPageChanged: (index) => controller.bannerIndex.value = index,
-              itemBuilder: (context, index) => const _HeroBanner(),
+          Obx(
+            () => SizedBox(
+              height: 245,
+              child: PageView.builder(
+                itemCount: controller.heroArticles.length,
+                onPageChanged: (index) =>
+                    controller.heroCarouselIndex.value = index,
+                itemBuilder: (context, index) =>
+                    _HeroBanner(article: controller.heroArticles[index]),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -47,14 +52,14 @@ class ArticlesScreen extends GetView<ArticlesController> {
             () => Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                3,
+                controller.heroArticles.length,
                 (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: controller.bannerIndex.value == index ? 8 : 6,
-                  height: controller.bannerIndex.value == index ? 8 : 6,
+                  width: controller.heroCarouselIndex.value == index ? 8 : 6,
+                  height: controller.heroCarouselIndex.value == index ? 8 : 6,
                   decoration: BoxDecoration(
-                    color: controller.bannerIndex.value == index
+                    color: controller.heroCarouselIndex.value == index
                         ? AppColors.primaryRed
                         : AppColors.grayMedium,
                     shape: BoxShape.circle,
@@ -70,43 +75,49 @@ class ArticlesScreen extends GetView<ArticlesController> {
               subtitle: 'Latest article this month',
             ),
           ),
-          ...controller.articles.map(
-            (article) => Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 11),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => controller.openArticle(article),
-                child: Container(
-                  height: 108,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardDark,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          article.title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+          Obx(
+            () => Column(
+              children: controller.recommendedArticles
+                  .map(
+                    (article) => Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 11),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => controller.selectArticle(article),
+                        child: Container(
+                          height: 108,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardDark,
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  article.title,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              GymImage(
+                                url: article.imageUrl,
+                                width: 116,
+                                height: 84,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      GymImage(
-                        url: article.imageUrl,
-                        width: 116,
-                        height: 84,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ],
@@ -116,7 +127,9 @@ class ArticlesScreen extends GetView<ArticlesController> {
 }
 
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner();
+  const _HeroBanner({required this.article});
+
+  final ArticleModel article;
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -128,10 +141,7 @@ class _HeroBanner extends StatelessWidget {
         bottom: 0,
         top: 0,
         width: MediaQuery.sizeOf(context).width * .58,
-        child: GymImage(
-          url: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=900',
-          fit: BoxFit.cover,
-        ),
+        child: GymImage(url: article.imageUrl, fit: BoxFit.cover),
       ),
       Positioned.fill(
         child: DecoratedBox(
@@ -151,17 +161,17 @@ class _HeroBanner extends StatelessWidget {
         left: 18,
         top: 42,
         width: MediaQuery.sizeOf(context).width * .47,
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Get Ready for\nNew Era',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              article.title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            SizedBox(height: 9),
+            const SizedBox(height: 9),
             Text(
-              'That strategy doesn’t need to be so rigid that it leaves no room for fun.',
-              style: TextStyle(fontSize: 10, height: 1.5),
+              article.content,
+              style: const TextStyle(fontSize: 10, height: 1.5),
             ),
           ],
         ),

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:gymnestic/core/theme/app_colors.dart';
 import 'package:gymnestic/features/articles/presentation/pages/articles_screen.dart';
 import 'package:gymnestic/features/dashboard/presentation/controllers/dashboard_controller.dart';
-import 'package:gymnestic/features/home/presentation/home_screen.dart';
+import 'package:gymnestic/features/dashboard/presentation/pages/home_screen.dart';
 import 'package:gymnestic/features/profile/presentation/pages/profile_screen.dart';
 import 'package:gymnestic/features/statistics/presentation/pages/statistics_screen.dart';
 

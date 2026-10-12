@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:gymnestic/features/workout/presentation/controllers/workout_details_controller.dart';
+import 'package:gymnestic/features/workouts/presentation/controllers/workout_details_controller.dart';
 
 class WorkoutDetailsBinding extends Bindings {
   @override

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:gymnestic/features/articles/presentation/controllers/articles_controller.dart';
 import 'package:gymnestic/features/dashboard/presentation/controllers/dashboard_controller.dart';
-import 'package:gymnestic/features/home/presentation/controllers/home_controller.dart';
+import 'package:gymnestic/features/dashboard/presentation/controllers/home_controller.dart';
 import 'package:gymnestic/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:gymnestic/features/statistics/presentation/controllers/statistics_controller.dart';
 

@@ -4,6 +4,8 @@ import 'package:gymnestic/features/articles/presentation/controllers/articles_co
 class ArticlesBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ArticlesController>(ArticlesController.new);
+    if (!Get.isRegistered<ArticlesController>()) {
+      Get.lazyPut<ArticlesController>(ArticlesController.new);
+    }
   }
 }

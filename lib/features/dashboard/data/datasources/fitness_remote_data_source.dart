@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
-import 'package:gymnestic/features/dashboard/data/models/daily_record_model.dart';
-import 'package:gymnestic/features/workouts/data/models/daily_goal_model.dart';
+
+import '../models/daily_record_model.dart';
+import '../../../workouts/data/models/daily_goal_model.dart';
 
 class FitnessRemoteDataSource {
   FitnessRemoteDataSource({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -27,38 +28,62 @@ class FitnessRemoteDataSource {
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
       _firestore.collection('users').doc(uid);
 
+  // 1. STREAM TODAY'S RECORD (Necessary for real-time reactivity on active metrics)
   Stream<DailyRecordModel> streamTodayRecord() {
     final uid = _uid;
     if (uid == null) return Stream.value(DailyRecordModel.empty(_todayKey));
 
     final docRef = _userDoc(uid).collection('daily_records').doc(_todayKey);
 
-    return docRef.snapshots().map((snapshot) {
+    return docRef.snapshots(includeMetadataChanges: false).map((snapshot) {
       if (!snapshot.exists || snapshot.data() == null) {
-        docRef.set(DailyRecordModel.empty(_todayKey).toMap());
+        // Only write if genuinely absent
+        docRef.set(
+          DailyRecordModel.empty(_todayKey).toMap(),
+          SetOptions(merge: true),
+        );
         return DailyRecordModel.empty(_todayKey);
       }
       return DailyRecordModel.fromMap(snapshot.id, snapshot.data()!);
     });
   }
 
-  Stream<List<DailyRecordModel>> streamPastRecords({int days = 5}) {
+  // 2. OPTIMIZATION: ONE-TIME FETCH FOR HISTORICAL CHART DATA
+  // Replaces the open snapshot stream that caused 5 reads per click.
+  Future<List<DailyRecordModel>> fetchPastRecords({int days = 5}) async {
     final uid = _uid;
-    if (uid == null) return Stream.value(const []);
+    if (uid == null) return const [];
 
-    return _userDoc(uid)
-        .collection('daily_records')
-        .orderBy('dateKey', descending: true)
-        .limit(days)
-        .snapshots()
-        .map((snapshot) {
-          final records = snapshot.docs
-              .map((doc) => DailyRecordModel.fromMap(doc.id, doc.data()))
-              .toList();
-          return records.reversed.toList();
-        });
+    try {
+      final query = _userDoc(uid)
+          .collection('daily_records')
+          .orderBy('dateKey', descending: true)
+          .limit(days);
+
+      // Attempt to load from device cache first ($0.00 cost)
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      try {
+        snapshot = await query.get(const GetOptions(source: Source.cache));
+        if (snapshot.docs.isEmpty) {
+          snapshot = await query.get(const GetOptions(source: Source.server));
+        }
+      } catch (_) {
+        snapshot = await query.get(
+          const GetOptions(source: Source.serverAndCache),
+        );
+      }
+
+      final records = snapshot.docs
+          .map((doc) => DailyRecordModel.fromMap(doc.id, doc.data()))
+          .toList();
+
+      return records.reversed.toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
+  // 3. LOG HEALTH METRICS (Single targeted document merge write)
   Future<void> logHealthMetrics({required int bpm, required int weight}) async {
     final uid = _uid;
     if (uid == null) return;
@@ -71,6 +96,7 @@ class FitnessRemoteDataSource {
     }, SetOptions(merge: true));
   }
 
+  // 4. ATOMIC GOAL TOGGLE (Batch write: 1 round-trip network payload)
   Future<void> toggleGoalCompletion({
     required DailyGoalModel goal,
     required bool isCompleted,
@@ -101,7 +127,7 @@ class FitnessRemoteDataSource {
     await batch.commit();
   }
 
-  /// Streams goals specifically matching the chosen programId
+  // 5. STREAM DAILY GOALS (Only reads for the specific active programId)
   Stream<List<DailyGoalModel>> streamDailyGoals({required String programId}) {
     final uid = _uid;
     if (uid == null) {
@@ -114,7 +140,7 @@ class FitnessRemoteDataSource {
 
     return goalsRef
         .where('programId', isEqualTo: programId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: false)
         .asyncMap((snapshot) async {
           if (snapshot.docs.isEmpty) {
             await _seedDefaultGoals(uid);
@@ -128,20 +154,22 @@ class FitnessRemoteDataSource {
         });
   }
 
-  Stream<String> streamGenderPreference() {
+  // 6. OPTIMIZATION: ONE-TIME GENDER PREFERENCE FETCH
+  // Eliminates continuous listeners on the root user document.
+  Future<String> getGenderPreference() async {
     final uid = _uid;
-    if (uid == null) return Stream.value('Male');
+    if (uid == null) return 'Male';
 
-    return _userDoc(uid).snapshots().map((snapshot) {
-      final gender = snapshot.data()?['genderPreference'];
-      return gender == 'Female' ? 'Female' : 'Male';
-    });
+    try {
+      final doc = await _userDoc(uid)
+          .get(const GetOptions(source: Source.serverAndCache));
+      return doc.data()?['genderPreference'] as String? ?? 'Male';
+    } catch (_) {
+      return 'Male';
+    }
   }
 
   Future<void> saveGenderPreference(String gender) async {
-    if (gender != 'Male' && gender != 'Female') {
-      throw ArgumentError.value(gender, 'gender', 'Unsupported gender');
-    }
     final uid = _uid;
     if (uid == null) return;
 
@@ -158,9 +186,7 @@ class FitnessRemoteDataSource {
     await batch.commit();
   }
 
-  // Curated, unique goals for each specific activity program
   static const List<DailyGoalModel> _defaultGoals = <DailyGoalModel>[
-    // 1. Beginner Program Goals
     DailyGoalModel(
       id: 'beg-jump-rope',
       programId: 'beginner',
@@ -197,8 +223,6 @@ class FitnessRemoteDataSource {
       gender: 'All',
       calorieReward: 80,
     ),
-
-    // 2. Strength Training Goals
     DailyGoalModel(
       id: 'str-pushups-50',
       programId: 'strength',
@@ -235,8 +259,6 @@ class FitnessRemoteDataSource {
       gender: 'All',
       calorieReward: 50,
     ),
-
-    // 3. Daily Stretch Goals
     DailyGoalModel(
       id: 'strt-morning-flow',
       programId: 'stretch',

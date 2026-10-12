@@ -17,16 +17,13 @@ class HomeController extends GetxController {
 
   final FitnessRemoteDataSource _dataSource;
 
-  // Header state
   final RxString userName = 'Athlete'.obs;
   final RxString currentDate = ''.obs;
 
-  // Status card metrics (default to clean initial states)
   final RxInt bpm = 70.obs;
   final RxInt kcalBurned = 0.obs;
   final RxInt currentWeight = 0.obs;
 
-  // Static program cards
   final RxList<ActivityProgramModel> programs = <ActivityProgramModel>[
     const ActivityProgramModel(
       id: 'beginner',
@@ -54,7 +51,6 @@ class HomeController extends GetxController {
     ),
   ].obs;
 
-  // Line chart spots
   final RxList<FlSpot> statusChartSpots = <FlSpot>[
     const FlSpot(0, 0),
     const FlSpot(1, 0),
@@ -64,13 +60,13 @@ class HomeController extends GetxController {
   ].obs;
 
   StreamSubscription<DailyRecordModel>? _todaySubscription;
-  StreamSubscription<List<DailyRecordModel>>? _pastRecordsSubscription;
 
   @override
   void onInit() {
     super.onInit();
     _loadUserInfo();
-    _bindStreams();
+    _bindTodayStream();
+    loadPastRecords();
   }
 
   void _loadUserInfo() {
@@ -87,8 +83,8 @@ class HomeController extends GetxController {
     }
   }
 
-  void _bindStreams() {
-    // 1. Listen to today's daily record (BPM, Weight, and Calorie Burn)
+  // Listen exclusively to today's document
+  void _bindTodayStream() {
     _todaySubscription?.cancel();
     _todaySubscription = _dataSource.streamTodayRecord().listen(
       (record) {
@@ -103,40 +99,35 @@ class HomeController extends GetxController {
         );
       },
     );
-
-    // 2. Listen to the past 5 days to plot actual calorie history on the line chart
-    _pastRecordsSubscription?.cancel();
-    _pastRecordsSubscription = _dataSource.streamPastRecords(days: 5).listen((
-      records,
-    ) {
-      if (records.isEmpty) {
-        statusChartSpots.assignAll(const [
-          FlSpot(0, 0),
-          FlSpot(1, 0),
-          FlSpot(2, 0),
-          FlSpot(3, 0),
-          FlSpot(4, 0),
-        ]);
-        return;
-      }
-
-      final spots = <FlSpot>[];
-      for (int i = 0; i < records.length; i++) {
-        // Normalize calorie burn into a 0.0 - 6.0 scale for chart display
-        final scaledY = (records[i].kcalBurned / 100.0).clamp(0.0, 6.0);
-        spots.add(FlSpot(i.toDouble(), scaledY));
-      }
-
-      // Fill remaining days if user has fewer than 5 days of history
-      while (spots.length < 5) {
-        spots.add(FlSpot(spots.length.toDouble(), 0));
-      }
-
-      statusChartSpots.assignAll(spots);
-    });
   }
 
-  /// Opens the bottom sheet modal to log actual resting BPM and body weight
+  // OPTIMIZATION: Fetches historical chart spots once without lingering listeners
+  Future<void> loadPastRecords() async {
+    final records = await _dataSource.fetchPastRecords(days: 5);
+    if (records.isEmpty) {
+      statusChartSpots.assignAll(const [
+        FlSpot(0, 0),
+        FlSpot(1, 0),
+        FlSpot(2, 0),
+        FlSpot(3, 0),
+        FlSpot(4, 0),
+      ]);
+      return;
+    }
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < records.length; i++) {
+      final scaledY = (records[i].kcalBurned / 100.0).clamp(0.0, 6.0);
+      spots.add(FlSpot(i.toDouble(), scaledY));
+    }
+
+    while (spots.length < 5) {
+      spots.add(FlSpot(spots.length.toDouble(), 0));
+    }
+
+    statusChartSpots.assignAll(spots);
+  }
+
   void openLogMetricsDialog() {
     Get.bottomSheet(
       LogMetricsBottomSheet(
@@ -163,7 +154,6 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     _todaySubscription?.cancel();
-    _pastRecordsSubscription?.cancel();
     super.onClose();
   }
 }

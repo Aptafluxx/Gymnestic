@@ -103,7 +103,7 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
               ),
               const SizedBox(height: 14),
               AppTextField(
-                controller: bpmController,
+                controller: weightController,
                 hintText: "Current Weight (kg/lbs) e.g. 120",
                 prefixIcon: Icons.favorite_outline_rounded,
                 keyboardType: .number,

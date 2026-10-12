@@ -9,7 +9,6 @@ import '../../../dashboard/data/models/activity_program_model.dart';
 class WorkoutDetailsController extends GetxController {
   final FitnessRemoteDataSource _dataSource = FitnessRemoteDataSource();
 
-  // Active Program Details
   final Rx<ActivityProgramModel> activeProgram = const ActivityProgramModel(
     id: 'beginner',
     title: 'Training for Beginner',
@@ -22,13 +21,13 @@ class WorkoutDetailsController extends GetxController {
   final RxList<DailyGoalModel> allGoals = <DailyGoalModel>[].obs;
 
   StreamSubscription? _goalsSubscription;
-  StreamSubscription? _genderSubscription;
 
   @override
   void onInit() {
     super.onInit();
     _extractProgramArguments();
-    _bindStreams();
+    _loadGender();
+    _bindGoalsStream();
   }
 
   void _extractProgramArguments() {
@@ -37,14 +36,12 @@ class WorkoutDetailsController extends GetxController {
     }
   }
 
-  void _bindStreams() {
-    // 1. Listen to user gender preference
-    _genderSubscription?.cancel();
-    _genderSubscription = _dataSource.streamGenderPreference().listen((gender) {
-      selectedGender.value = gender;
-    });
+  // OPTIMIZATION: One-time gender fetch instead of an open snapshot listener
+  Future<void> _loadGender() async {
+    selectedGender.value = await _dataSource.getGenderPreference();
+  }
 
-    // 2. Stream goals filtered by this specific program ID
+  void _bindGoalsStream() {
     _goalsSubscription?.cancel();
     _goalsSubscription = _dataSource
         .streamDailyGoals(programId: activeProgram.value.id)
@@ -76,20 +73,19 @@ class WorkoutDetailsController extends GetxController {
 
     final newStatus = !goal.isCompleted;
 
-    // Optimistic UI update
+    // Optimistic UI update for immediate screen response
     final index = allGoals.indexWhere((g) => g.id == id);
     if (index != -1) {
       allGoals[index] = goal.copyWith(isCompleted: newStatus);
     }
 
-    // Persist to Cloud Firestore and update today's calorie totals
+    // Atomic write in Firestore
     await _dataSource.toggleGoalCompletion(goal: goal, isCompleted: newStatus);
   }
 
   @override
   void onClose() {
     _goalsSubscription?.cancel();
-    _genderSubscription?.cancel();
     super.onClose();
   }
 }

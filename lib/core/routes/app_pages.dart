@@ -4,8 +4,18 @@ import 'package:gymnestic/features/auth/presentation/controllers/login_binding.d
 import 'package:gymnestic/features/auth/presentation/controllers/signup_binding.dart';
 import 'package:gymnestic/features/auth/presentation/pages/login_screen.dart';
 import 'package:gymnestic/features/auth/presentation/pages/signup_screen.dart';
-import 'package:gymnestic/features/home/controller/home_binding.dart';
-import 'package:gymnestic/features/home/presentation/home_screen.dart';
+import 'package:gymnestic/features/dashboard/presentation/controllers/dashboard_binding.dart';
+import 'package:gymnestic/features/dashboard/presentation/pages/dashboard_shell_screen.dart';
+import 'package:gymnestic/features/workout/presentation/controllers/workout_details_binding.dart';
+import 'package:gymnestic/features/workout/presentation/pages/workout_details_screen.dart';
+import 'package:gymnestic/features/articles/presentation/controllers/articles_binding.dart';
+import 'package:gymnestic/features/articles/presentation/controllers/article_details_binding.dart';
+import 'package:gymnestic/features/articles/presentation/pages/articles_screen.dart';
+import 'package:gymnestic/features/articles/presentation/pages/article_details_screen.dart';
+import 'package:gymnestic/features/profile/presentation/controllers/profile_binding.dart';
+import 'package:gymnestic/features/profile/presentation/pages/profile_screen.dart';
+import 'package:gymnestic/features/statistics/presentation/controllers/statistics_binding.dart';
+import 'package:gymnestic/features/statistics/presentation/pages/statistics_screen.dart';
 import 'package:gymnestic/features/onboarding/controllers/onboarding_binding.dart';
 import 'package:gymnestic/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:gymnestic/features/splash/controller/splash_binding.dart';
@@ -39,8 +49,38 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.home,
-      page: () => const HomeScreen(),
-      binding: HomeBinding(),
+      page: () => const DashboardShellScreen(),
+      binding: DashboardBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.workoutDetails,
+      page: () => const WorkoutDetailsScreen(),
+      binding: WorkoutDetailsBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.articles,
+      page: () => const ArticlesScreen(),
+      binding: ArticlesBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.articleDetails,
+      page: () => const ArticleDetailsScreen(),
+      binding: ArticleDetailsBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.profile,
+      page: () => const ProfileScreen(),
+      binding: ProfileBinding(),
+      transition: .rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.statistics,
+      page: () => const StatisticsScreen(),
+      binding: StatisticsBinding(),
       transition: .rightToLeft,
     ),
   ];

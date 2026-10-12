@@ -1,35 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:gymnestic/core/theme/app_colors.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
-class AuthTextField extends StatelessWidget {
+class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final IconData prefixIcon;
   final Widget? suffixIcon;
-  final bool isPassword;
+  final bool? isPassword;
   final TextInputType keyboardType;
   final ValueChanged<String>? onChanged;
   final String? errorText;
-  final TextInputAction textInputAction;
-
-  const AuthTextField({
+  final TextInputAction? textInputAction;
+  const AppTextField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.prefixIcon,
     this.suffixIcon,
     this.isPassword = false,
-    this.keyboardType = TextInputType.text,
+    required this.keyboardType,
     this.onChanged,
     this.errorText,
-    required this.textInputAction,
+    this.textInputAction = .next,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasError = errorText != null && errorText!.isNotEmpty;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,7 +41,7 @@ class AuthTextField extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
-            obscureText: isPassword,
+            obscureText: isPassword ?? false,
             keyboardType: keyboardType,
             onChanged: onChanged,
             textInputAction: textInputAction,

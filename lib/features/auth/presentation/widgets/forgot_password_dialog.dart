@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/widgets/app_text_field.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/forgot_password_controller.dart';
-import 'auth_text_field.dart';
 
 class ForgotPasswordDialog extends StatelessWidget {
   const ForgotPasswordDialog({super.key});
@@ -62,7 +62,7 @@ class ForgotPasswordDialog extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        AuthTextField(
+        AppTextField(
           controller: controller.emailController,
           hintText: 'Enter your email',
           prefixIcon: Icons.email_outlined,

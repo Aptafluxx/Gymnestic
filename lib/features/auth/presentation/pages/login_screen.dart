@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
+import 'package:gymnestic/core/widgets/app_text_field.dart';
 import 'package:gymnestic/core/widgets/shake_widget.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/login_controller.dart';
-import '../widgets/auth_text_field.dart';
 
 class LoginScreen extends GetView<LoginController> {
   const LoginScreen({super.key});
@@ -71,20 +71,20 @@ class LoginScreen extends GetView<LoginController> {
                       crossAxisAlignment: .end,
                       children: [
                         Obx(
-                          () => AuthTextField(
+                          () => AppTextField(
                             controller: controller.emailController,
                             hintText: 'Email',
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             onChanged: controller.onEmailChanged,
                             errorText: controller.emailError,
-                            textInputAction: .next,
                           ),
                         ),
                         const SizedBox(height: 20),
                         Obx(
-                          () => AuthTextField(
+                          () => AppTextField(
                             controller: controller.passwordController,
+                            keyboardType: .visiblePassword,
                             hintText: 'Password',
                             prefixIcon: Icons.lock_outline_rounded,
                             isPassword: controller.isPasswordObscured.value,

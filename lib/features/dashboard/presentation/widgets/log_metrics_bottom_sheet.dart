@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/widgets/app_text_field.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -43,9 +44,7 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Read the soft keyboard height dynamically
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.cardDark,
@@ -63,9 +62,7 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Bottom sheet grab handle bar
               Center(
                 child: Container(
                   width: 38,
@@ -77,8 +74,6 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
                   ),
                 ),
               ),
-
-              // Title
               const Text(
                 'Log Health Metrics',
                 style: TextStyle(
@@ -90,8 +85,6 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
-
-              // Subtitle
               const Text(
                 'Update your resting heart rate and current weight',
                 style: TextStyle(
@@ -102,85 +95,21 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 22),
-
-              // Resting BPM Input Field
-              TextField(
+              AppTextField(
                 controller: bpmController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(
-                  color: AppColors.textWhite,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Resting BPM',
-                  hintText: 'e.g. 72',
-                  prefixIcon: const Icon(
-                    Icons.favorite_outline_rounded,
-                    color: AppColors.primaryRed,
-                    size: 20,
-                  ),
-                  labelStyle: const TextStyle(color: AppColors.grayLight),
-                  filled: true,
-                  fillColor: AppColors.surfaceDark,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: AppColors.primaryRed,
-                      width: 1.2,
-                    ),
-                  ),
-                ),
+                hintText: "Resting BPM e.g. 72",
+                prefixIcon: Icons.favorite_outline_rounded,
+                keyboardType: .number,
               ),
               const SizedBox(height: 14),
-
-              // Weight Input Field
-              TextField(
-                controller: weightController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(
-                  color: AppColors.textWhite,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Current Weight (kg/lbs)',
-                  hintText: 'e.g. 120',
-                  prefixIcon: const Icon(
-                    Icons.monitor_weight_outlined,
-                    color: AppColors.primaryRed,
-                    size: 20,
-                  ),
-                  labelStyle: const TextStyle(color: AppColors.grayLight),
-                  filled: true,
-                  fillColor: AppColors.surfaceDark,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: AppColors.primaryRed,
-                      width: 1.2,
-                    ),
-                  ),
-                ),
+              AppTextField(
+                controller: bpmController,
+                hintText: "Current Weight (kg/lbs) e.g. 120",
+                prefixIcon: Icons.favorite_outline_rounded,
+                keyboardType: .number,
               ),
               const SizedBox(height: 24),
-
-              // Save Record Action Button
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryRed,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
                 onPressed: () {
                   final bpm =
                       int.tryParse(bpmController.text.trim()) ??
@@ -191,15 +120,7 @@ class _LogMetricsBottomSheetState extends State<LogMetricsBottomSheet> {
                   widget.onSave(bpm, weight);
                   Get.back();
                 },
-                child: const Text(
-                  'Save Record',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: AppColors.textWhite,
-                  ),
-                ),
+                child: const Text('Save Record'),
               ),
             ],
           ),

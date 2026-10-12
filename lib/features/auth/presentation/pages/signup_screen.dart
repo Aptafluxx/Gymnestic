@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/core/theme/app_colors.dart';
+import 'package:gymnestic/core/widgets/app_text_field.dart';
 import 'package:gymnestic/core/widgets/shake_widget.dart';
 import 'package:gymnestic/features/auth/presentation/controllers/signup_controller.dart';
-import 'package:gymnestic/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SignupScreen extends GetView<SignupController> {
@@ -69,12 +69,11 @@ class SignupScreen extends GetView<SignupController> {
                     child: Column(
                       children: [
                         Obx(
-                          () => AuthTextField(
+                          () => AppTextField(
                             controller: controller.usernameController,
                             hintText: 'Username',
                             prefixIcon: Icons.person_rounded,
                             keyboardType: .name,
-                            textInputAction: .next,
                             onChanged: controller.onUsernameChanged,
                             errorText: controller.usernameError,
                           ),
@@ -82,19 +81,18 @@ class SignupScreen extends GetView<SignupController> {
 
                         const SizedBox(height: 20),
                         Obx(
-                          () => AuthTextField(
+                          () => AppTextField(
                             controller: controller.emailController,
                             hintText: 'Email',
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             onChanged: controller.onEmailChanged,
                             errorText: controller.emailError,
-                            textInputAction: .next,
                           ),
                         ),
                         const SizedBox(height: 20),
                         Obx(
-                          () => AuthTextField(
+                          () => AppTextField(
                             controller: controller.passwordController,
                             hintText: 'Password',
                             prefixIcon: Icons.lock_outline_rounded,
@@ -113,6 +111,7 @@ class SignupScreen extends GetView<SignupController> {
                               onPressed: controller.togglePasswordVisibility,
                             ),
                             textInputAction: .done,
+                            keyboardType: .visiblePassword,
                           ),
                         ),
                       ],

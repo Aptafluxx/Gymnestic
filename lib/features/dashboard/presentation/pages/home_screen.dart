@@ -90,7 +90,8 @@ class _ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
     borderRadius: BorderRadius.circular(15),
-    onTap: () => Get.toNamed(AppRoutes.workoutDetails),
+    // Pass the tapped program model as an argument
+    onTap: () => Get.toNamed(AppRoutes.workoutDetails, arguments: program),
     child: SizedBox(
       height: 145,
       child: Stack(

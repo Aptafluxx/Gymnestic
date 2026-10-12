@@ -1,94 +1,89 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:gymnestic/core/widgets/app_snackbar.dart';
-import 'package:gymnestic/features/dashboard/data/datasources/fitness_remote_data_source.dart';
-import 'package:gymnestic/features/workouts/data/models/daily_goal_model.dart';
+
+import '../../data/models/daily_goal_model.dart';
+import '../../../dashboard/data/datasources/fitness_remote_data_source.dart';
+import '../../../dashboard/data/models/activity_program_model.dart';
 
 class WorkoutDetailsController extends GetxController {
-  WorkoutDetailsController({FitnessRemoteDataSource? dataSource})
-    : _dataSource = dataSource ?? FitnessRemoteDataSource();
+  final FitnessRemoteDataSource _dataSource = FitnessRemoteDataSource();
 
-  final FitnessRemoteDataSource _dataSource;
+  // Active Program Details
+  final Rx<ActivityProgramModel> activeProgram = const ActivityProgramModel(
+    id: 'beginner',
+    title: 'Training for Beginner',
+    level: 'Build Your Body',
+    imageUrl: '',
+    difficultyRating: 2,
+  ).obs;
+
   final RxString selectedGender = 'Male'.obs;
   final RxList<DailyGoalModel> allGoals = <DailyGoalModel>[].obs;
 
-  StreamSubscription<List<DailyGoalModel>>? _goalsSubscription;
-  StreamSubscription<String>? _genderSubscription;
+  StreamSubscription? _goalsSubscription;
+  StreamSubscription? _genderSubscription;
 
   @override
   void onInit() {
     super.onInit();
-    _genderSubscription = _dataSource.streamGenderPreference().listen(
-      (gender) => selectedGender.value = gender,
-      onError: (Object error) {
-        AppSnackbar.error(
-          'Preference unavailable',
-          'Your gender preference could not be loaded.',
-        );
-      },
-    );
-    _goalsSubscription = _dataSource.streamDailyGoals().listen(
-      allGoals.assignAll,
-      onError: (Object error) {
-        AppSnackbar.error(
-          'Daily goals unavailable',
-          'Your training goals could not be loaded. Please try again.',
-        );
-      },
-    );
+    _extractProgramArguments();
+    _bindStreams();
   }
 
-  List<DailyGoalModel> get dailyGoals => allGoals
-      .where(
-        (goal) => goal.gender == 'All' || goal.gender == selectedGender.value,
-      )
-      .toList();
+  void _extractProgramArguments() {
+    if (Get.arguments is ActivityProgramModel) {
+      activeProgram.value = Get.arguments as ActivityProgramModel;
+    }
+  }
+
+  void _bindStreams() {
+    // 1. Listen to user gender preference
+    _genderSubscription?.cancel();
+    _genderSubscription = _dataSource.streamGenderPreference().listen((gender) {
+      selectedGender.value = gender;
+    });
+
+    // 2. Stream goals filtered by this specific program ID
+    _goalsSubscription?.cancel();
+    _goalsSubscription = _dataSource
+        .streamDailyGoals(programId: activeProgram.value.id)
+        .listen((goals) {
+          allGoals.assignAll(goals);
+        });
+  }
+
+  List<DailyGoalModel> get dailyGoals {
+    return allGoals.where((goal) {
+      return goal.gender == 'All' || goal.gender == selectedGender.value;
+    }).toList();
+  }
 
   int get completedGoalsCount =>
       dailyGoals.where((goal) => goal.isCompleted).length;
-
   int get totalGoalsCount => dailyGoals.length;
 
   Future<void> setGender(String gender) async {
-    if (gender != 'Male' && gender != 'Female') return;
-    final previousGender = selectedGender.value;
-    selectedGender.value = gender;
-    try {
+    if (gender == 'Male' || gender == 'Female') {
+      selectedGender.value = gender;
       await _dataSource.saveGenderPreference(gender);
-    } on FirebaseException {
-      selectedGender.value = previousGender;
-      AppSnackbar.error(
-        'Preference not saved',
-        'Your gender preference could not be saved. Please try again.',
-      );
     }
   }
 
   Future<void> toggleGoalStatus(String id) async {
-    final index = allGoals.indexWhere((goal) => goal.id == id);
-    if (index == -1) return;
+    final goal = allGoals.firstWhereOrNull((g) => g.id == id);
+    if (goal == null) return;
 
-    final goal = allGoals[index];
-    final updatedGoal = goal.copyWith(isCompleted: !goal.isCompleted);
-    allGoals[index] = updatedGoal;
+    final newStatus = !goal.isCompleted;
 
-    try {
-      await _dataSource.toggleGoalCompletion(
-        goal: goal,
-        isCompleted: updatedGoal.isCompleted,
-      );
-    } on FirebaseException {
-      final currentIndex = allGoals.indexWhere((item) => item.id == id);
-      if (currentIndex != -1 && allGoals[currentIndex] == updatedGoal) {
-        allGoals[currentIndex] = goal;
-      }
-      AppSnackbar.error(
-        'Goal not saved',
-        'Your training goal could not be updated. Please try again.',
-      );
+    // Optimistic UI update
+    final index = allGoals.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      allGoals[index] = goal.copyWith(isCompleted: newStatus);
     }
+
+    // Persist to Cloud Firestore and update today's calorie totals
+    await _dataSource.toggleGoalCompletion(goal: goal, isCompleted: newStatus);
   }
 
   @override

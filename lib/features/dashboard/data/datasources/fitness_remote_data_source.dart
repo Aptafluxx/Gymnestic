@@ -101,21 +101,31 @@ class FitnessRemoteDataSource {
     await batch.commit();
   }
 
-  Stream<List<DailyGoalModel>> streamDailyGoals() {
+  /// Streams goals specifically matching the chosen programId
+  Stream<List<DailyGoalModel>> streamDailyGoals({required String programId}) {
     final uid = _uid;
-    if (uid == null) return Stream.value(_defaultGoals);
+    if (uid == null) {
+      return Stream.value(
+        _defaultGoals.where((g) => g.programId == programId).toList(),
+      );
+    }
 
     final goalsRef = _userDoc(uid).collection('daily_goals');
 
-    return goalsRef.snapshots().asyncMap((snapshot) async {
-      if (snapshot.docs.isEmpty) {
-        await _seedDefaultGoals(uid);
-        return _defaultGoals;
-      }
-      return snapshot.docs
-          .map((doc) => DailyGoalModel.fromMap(doc.id, doc.data()))
-          .toList();
-    });
+    return goalsRef
+        .where('programId', isEqualTo: programId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          if (snapshot.docs.isEmpty) {
+            await _seedDefaultGoals(uid);
+            return _defaultGoals
+                .where((g) => g.programId == programId)
+                .toList();
+          }
+          return snapshot.docs
+              .map((doc) => DailyGoalModel.fromMap(doc.id, doc.data()))
+              .toList();
+        });
   }
 
   Stream<String> streamGenderPreference() {
@@ -143,51 +153,125 @@ class FitnessRemoteDataSource {
     final batch = _firestore.batch();
     final colRef = _userDoc(uid).collection('daily_goals');
     for (final item in _defaultGoals) {
-      batch.set(colRef.doc(item.id), item.toMap());
+      batch.set(colRef.doc(item.id), item.toMap(), SetOptions(merge: true));
     }
     await batch.commit();
   }
 
+  // Curated, unique goals for each specific activity program
   static const List<DailyGoalModel> _defaultGoals = <DailyGoalModel>[
+    // 1. Beginner Program Goals
     DailyGoalModel(
-      id: 'push-ups-20',
+      id: 'beg-jump-rope',
+      programId: 'beginner',
       time: '07:10',
-      title: 'Push up 20 times',
+      title: 'Warm-up jump rope (5 mins)',
       isCompleted: false,
       gender: 'All',
       calorieReward: 25,
     ),
     DailyGoalModel(
-      id: 'morning-jog',
+      id: 'beg-push-ups',
+      programId: 'beginner',
       time: '08:15',
-      title: '30-minute morning jog',
+      title: 'Knee or wall push-ups x 15',
       isCompleted: false,
       gender: 'All',
-      calorieReward: 150,
+      calorieReward: 20,
     ),
     DailyGoalModel(
-      id: 'core-plank',
-      time: '12:30',
-      title: 'Core plank (3 sets x 60s)',
-      isCompleted: false,
-      gender: 'All',
-      calorieReward: 45,
-    ),
-    DailyGoalModel(
-      id: 'dumbbell-bench',
-      time: '17:00',
-      title: 'Dumbbell bench press',
-      isCompleted: false,
-      gender: 'Male',
-      calorieReward: 90,
-    ),
-    DailyGoalModel(
-      id: 'post-stretch',
-      time: '18:30',
-      title: 'Post-workout stretch',
+      id: 'beg-squats',
+      programId: 'beginner',
+      time: '11:30',
+      title: 'Bodyweight squats x 20',
       isCompleted: false,
       gender: 'All',
       calorieReward: 30,
+    ),
+    DailyGoalModel(
+      id: 'beg-jog',
+      programId: 'beginner',
+      time: '17:00',
+      title: 'Light walk or jog 15 minutes',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 80,
+    ),
+
+    // 2. Strength Training Goals
+    DailyGoalModel(
+      id: 'str-pushups-50',
+      programId: 'strength',
+      time: '07:00',
+      title: 'Standard push-ups 50 times',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 60,
+    ),
+    DailyGoalModel(
+      id: 'str-bench-press',
+      programId: 'strength',
+      time: '08:30',
+      title: 'Dumbbell bench press (4 sets x 10)',
+      isCompleted: false,
+      gender: 'Male',
+      calorieReward: 110,
+    ),
+    DailyGoalModel(
+      id: 'str-deadlift',
+      programId: 'strength',
+      time: '12:00',
+      title: 'Barbell deadlift (3 sets x 8)',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 140,
+    ),
+    DailyGoalModel(
+      id: 'str-plank',
+      programId: 'strength',
+      time: '17:30',
+      title: 'Core plank (3 sets x 90s)',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 50,
+    ),
+
+    // 3. Daily Stretch Goals
+    DailyGoalModel(
+      id: 'strt-morning-flow',
+      programId: 'stretch',
+      time: '06:30',
+      title: 'Full-body morning yoga flow',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 40,
+    ),
+    DailyGoalModel(
+      id: 'strt-hamstring',
+      programId: 'stretch',
+      time: '09:00',
+      title: 'Hamstring & quad deep stretch',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 20,
+    ),
+    DailyGoalModel(
+      id: 'strt-mobility',
+      programId: 'stretch',
+      time: '14:00',
+      title: 'Spine & neck mobility exercises',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 25,
+    ),
+    DailyGoalModel(
+      id: 'strt-breathing',
+      programId: 'stretch',
+      time: '21:00',
+      title: 'Evening relaxation & breathwork',
+      isCompleted: false,
+      gender: 'All',
+      calorieReward: 15,
     ),
   ];
 }

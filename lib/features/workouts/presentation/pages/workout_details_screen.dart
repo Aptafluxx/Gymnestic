@@ -14,7 +14,8 @@ class WorkoutDetailsScreen extends GetView<WorkoutDetailsController> {
         onPressed: Get.back,
         icon: const Icon(Icons.arrow_back_ios_new, size: 19),
       ),
-      title: const Text('Build your Body'),
+      // Dynamically displays the tapped program title in the AppBar
+      title: Obx(() => Text(controller.activeProgram.value.title)),
       actions: [
         IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
       ],
@@ -24,6 +25,7 @@ class WorkoutDetailsScreen extends GetView<WorkoutDetailsController> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
         children: [
+          // Gender Toggle
           Obx(
             () => Container(
               height: 58,
@@ -52,14 +54,18 @@ class WorkoutDetailsScreen extends GetView<WorkoutDetailsController> {
             ),
           ),
           const SizedBox(height: 24),
+
+          // Dynamic Section Heading
           Obx(
             () => SectionHeading(
               title: 'Daily Goals',
               subtitle:
-                  'Fitness and Things Training • ${controller.completedGoalsCount}/${controller.totalGoalsCount} completed',
+                  '${controller.activeProgram.value.level} • ${controller.completedGoalsCount}/${controller.totalGoalsCount} completed',
             ),
           ),
           const SizedBox(height: 17),
+
+          // Dynamic Goals Checklist
           Obx(
             () => Column(
               children: controller.dailyGoals
@@ -93,11 +99,26 @@ class WorkoutDetailsScreen extends GetView<WorkoutDetailsController> {
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(
-                                  goal.title,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      goal.title,
+                                      style: const TextStyle(fontSize: 12),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '+${goal.calorieReward} KCAL',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.primaryRed,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Icon(

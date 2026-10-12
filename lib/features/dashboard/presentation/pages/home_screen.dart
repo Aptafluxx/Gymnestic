@@ -48,7 +48,7 @@ class HomeScreen extends GetView<HomeController> {
                       ),
                     ),
                     IconButton(
-                      onPressed: controller.refreshDashboardData,
+                      onPressed: () {},
                       icon: const Icon(Icons.more_vert),
                     ),
                   ],
@@ -180,11 +180,57 @@ class _StatusCard extends StatelessWidget {
     ),
     child: Column(
       children: [
-        const Text(
-          'Current Status',
-          style: TextStyle(color: AppColors.grayLight, fontSize: 11),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Current Status',
+              style: TextStyle(
+                color: AppColors.grayLight,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            InkWell(
+              onTap: controller.openLogMetricsDialog,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primaryRed.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.edit_note_rounded,
+                      size: 15,
+                      color: AppColors.primaryRed,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Log Metrics',
+                      style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
+
+        // Line Chart
         SizedBox(
           height: 105,
           child: Obx(

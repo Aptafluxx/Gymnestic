@@ -1,16 +1,32 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/widgets/app_snackbar.dart';
+import 'package:gymnestic/features/dashboard/data/datasources/fitness_remote_data_source.dart';
 import 'package:gymnestic/features/dashboard/data/models/activity_program_model.dart';
+import 'package:gymnestic/features/dashboard/data/models/daily_record_model.dart';
+import 'package:gymnestic/features/dashboard/presentation/widgets/log_metrics_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 
 class HomeController extends GetxController {
-  final RxString userName = 'Roberto'.obs;
+  HomeController({FitnessRemoteDataSource? dataSource})
+    : _dataSource = dataSource ?? FitnessRemoteDataSource();
+
+  final FitnessRemoteDataSource _dataSource;
+
+  // Header state
+  final RxString userName = 'Athlete'.obs;
   final RxString currentDate = ''.obs;
-  final RxInt bpm = 78.obs;
-  final RxInt kcalBurned = 340.obs;
-  final RxInt currentWeight = 120.obs;
+
+  // Status card metrics (default to clean initial states)
+  final RxInt bpm = 70.obs;
+  final RxInt kcalBurned = 0.obs;
+  final RxInt currentWeight = 0.obs;
+
+  // Static program cards
   final RxList<ActivityProgramModel> programs = <ActivityProgramModel>[
     const ActivityProgramModel(
       id: 'beginner',
@@ -37,33 +53,28 @@ class HomeController extends GetxController {
       difficultyRating: 1,
     ),
   ].obs;
+
+  // Line chart spots
   final RxList<FlSpot> statusChartSpots = <FlSpot>[
-    const FlSpot(0, 1.4),
-    const FlSpot(1, 3.5),
-    const FlSpot(2, 1.8),
-    const FlSpot(3, 4.7),
-    const FlSpot(4, 4.5),
+    const FlSpot(0, 0),
+    const FlSpot(1, 0),
+    const FlSpot(2, 0),
+    const FlSpot(3, 0),
+    const FlSpot(4, 0),
   ].obs;
+
+  StreamSubscription<DailyRecordModel>? _todaySubscription;
+  StreamSubscription<List<DailyRecordModel>>? _pastRecordsSubscription;
 
   @override
   void onInit() {
     super.onInit();
-    refreshDashboardData();
+    _loadUserInfo();
+    _bindStreams();
   }
 
-  void refreshDashboardData() {
+  void _loadUserInfo() {
     currentDate.value = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
-    bpm.value = 78;
-    kcalBurned.value = 340;
-    currentWeight.value = 120;
-    statusChartSpots.assignAll(const [
-      FlSpot(0, 1.4),
-      FlSpot(1, 3.5),
-      FlSpot(2, 1.8),
-      FlSpot(3, 4.7),
-      FlSpot(4, 4.5),
-    ]);
-
     if (Firebase.apps.isNotEmpty) {
       final user = FirebaseAuth.instance.currentUser;
       final displayName = user?.displayName?.trim();
@@ -72,7 +83,87 @@ class HomeController extends GetxController {
           ? displayName!
           : emailPrefix?.isNotEmpty == true
           ? emailPrefix!
-          : 'Roberto';
+          : 'Athlete';
     }
+  }
+
+  void _bindStreams() {
+    // 1. Listen to today's daily record (BPM, Weight, and Calorie Burn)
+    _todaySubscription?.cancel();
+    _todaySubscription = _dataSource.streamTodayRecord().listen(
+      (record) {
+        bpm.value = record.bpm;
+        kcalBurned.value = record.kcalBurned;
+        currentWeight.value = record.weight;
+      },
+      onError: (Object error) {
+        AppSnackbar.error(
+          'Fitness data unavailable',
+          'Your latest metrics could not be loaded. Please try again.',
+        );
+      },
+    );
+
+    // 2. Listen to the past 5 days to plot actual calorie history on the line chart
+    _pastRecordsSubscription?.cancel();
+    _pastRecordsSubscription = _dataSource.streamPastRecords(days: 5).listen((
+      records,
+    ) {
+      if (records.isEmpty) {
+        statusChartSpots.assignAll(const [
+          FlSpot(0, 0),
+          FlSpot(1, 0),
+          FlSpot(2, 0),
+          FlSpot(3, 0),
+          FlSpot(4, 0),
+        ]);
+        return;
+      }
+
+      final spots = <FlSpot>[];
+      for (int i = 0; i < records.length; i++) {
+        // Normalize calorie burn into a 0.0 - 6.0 scale for chart display
+        final scaledY = (records[i].kcalBurned / 100.0).clamp(0.0, 6.0);
+        spots.add(FlSpot(i.toDouble(), scaledY));
+      }
+
+      // Fill remaining days if user has fewer than 5 days of history
+      while (spots.length < 5) {
+        spots.add(FlSpot(spots.length.toDouble(), 0));
+      }
+
+      statusChartSpots.assignAll(spots);
+    });
+  }
+
+  /// Opens the bottom sheet modal to log actual resting BPM and body weight
+  void openLogMetricsDialog() {
+    Get.bottomSheet(
+      LogMetricsBottomSheet(
+        currentBpm: bpm.value,
+        currentWeight: currentWeight.value,
+        onSave: (bpmValue, weightValue) async {
+          try {
+            await _dataSource.logHealthMetrics(
+              bpm: bpmValue,
+              weight: weightValue,
+            );
+          } catch (_) {
+            AppSnackbar.error(
+              'Health metrics not saved',
+              'Your metrics could not be stored. Please try again.',
+            );
+          }
+        },
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  @override
+  void onClose() {
+    _todaySubscription?.cancel();
+    _pastRecordsSubscription?.cancel();
+    super.onClose();
   }
 }

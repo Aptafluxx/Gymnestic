@@ -15,14 +15,14 @@ class StatisticsController extends GetxController {
   final RxInt targetActivity = 20.obs;
   final RxInt weeklyCalories = 0.obs;
 
-  // Sub-Metrics
-  final RxDouble runningKm = 45.0.obs;
-  final RxDouble targetRunningKm = 60.0.obs;
-  final RxInt runningKcal = 25.obs;
+  // Fully Dynamic Sub-Metrics (Start at 0 until logged)
+  final RxDouble runningKm = 0.0.obs;
+  final RxDouble targetRunningKm = 50.0.obs; // Weekly target goal
+  final RxInt runningKcal = 0.obs;
 
-  final RxInt sleepHours = 21.obs;
-  final RxInt targetSleepHours = 28.obs;
-  final RxInt sleepKcal = 25.obs;
+  final RxInt sleepHours = 0.obs;
+  final RxInt targetSleepHours = 56.obs; // 8 hours x 7 days = 56 weekly target
+  final RxInt sleepKcal = 0.obs;
 
   // Selected Day Index for Bar Chart (0: Mon, 6: Sun)
   final RxInt selectedDayIndex = (DateTime.now().weekday - 1).obs;
@@ -32,20 +32,17 @@ class StatisticsController extends GetxController {
 
   StreamSubscription<DailyRecordModel>? _todaySubscription;
 
-  // Computed Progress Percentage for Circular Ring
   int get progressPercentage {
     if (targetActivity.value <= 0) return 0;
     final percentage = (totalActivity.value / targetActivity.value) * 100;
     return percentage.clamp(0, 100).toInt();
   }
 
-  // DYNAMIC CHART CEILING: Computes dynamic maxY with 20% buffer to prevent overflow
   double get maxWeeklyKcal {
     double highest = 0.0;
     for (final kcal in weeklyDailyKcal) {
       if (kcal > highest) highest = kcal;
     }
-    // Baseline minimum of 200, or highest value + 20% headroom
     return highest > 160 ? highest * 1.2 : 200.0;
   }
 
@@ -56,13 +53,15 @@ class StatisticsController extends GetxController {
     _bindTodayStream();
   }
 
-Future<void> _loadStatistics({bool forceRefresh = false}) async {
+  Future<void> _loadStatistics({bool forceRefresh = false}) async {
     final records = await _dataSource.fetchCurrentWeekRecords(
       forceRefresh: forceRefresh,
     );
 
     int totalTasks = 0;
     int caloriesSum = 0;
+    double totalKm = 0.0;
+    int totalSleep = 0;
     final dayKcal = List<double>.filled(7, 0.0);
 
     for (final record in records) {
@@ -76,16 +75,22 @@ Future<void> _loadStatistics({bool forceRefresh = false}) async {
 
       totalTasks += record.completedGoalIds.length;
       caloriesSum += record.kcalBurned;
+      totalKm += record.runningKm;
+      totalSleep += record.sleepHours;
     }
 
     totalActivity.value = totalTasks;
     weeklyCalories.value = caloriesSum;
     weeklyDailyKcal.assignAll(dayKcal);
-  }
 
-  /// Triggered by pull-to-refresh on StatisticsScreen
-  Future<void> refreshStatistics() async {
-    await _loadStatistics(forceRefresh: true);
+    // DYNAMIC METRICS: Set weekly sums
+    runningKm.value = totalKm;
+    // Estimated burn rate: ~65 kcal burned per kilometer run
+    runningKcal.value = (totalKm * 65).toInt();
+
+    sleepHours.value = totalSleep;
+    // Estimated sleep metabolic burn: ~45 kcal burned per hour of sleep
+    sleepKcal.value = (totalSleep * 45);
   }
 
   void _bindTodayStream() {
@@ -96,6 +101,10 @@ Future<void> _loadStatistics({bool forceRefresh = false}) async {
         weeklyDailyKcal[currentWeekday] = todayRecord.kcalBurned.toDouble();
       }
     });
+  }
+
+  Future<void> refreshStatistics() async {
+    await _loadStatistics(forceRefresh: true);
   }
 
   void onSelectDay(int index) {

@@ -102,7 +102,7 @@ class HomeController extends GetxController {
   }
 
   // OPTIMIZATION: Fetches historical chart spots once without lingering listeners
-/// One-time fetch for historical days with optional cache bypass
+  /// One-time fetch for historical days with optional cache bypass
   Future<void> loadPastRecords({bool forceRefresh = false}) async {
     final records = await _dataSource.fetchPastRecords(
       days: 5,
@@ -148,11 +148,13 @@ class HomeController extends GetxController {
       LogMetricsBottomSheet(
         currentBpm: bpm.value,
         currentWeight: currentWeight.value,
-        onSave: (bpmValue, weightValue) async {
+        onSave: (bpmVal, weightVal, runningKmVal, sleepHoursVal) async {
           try {
             await _dataSource.logHealthMetrics(
-              bpm: bpmValue,
-              weight: weightValue,
+              bpm: bpmVal,
+              weight: weightVal,
+              runningKm: runningKmVal,
+              sleepHours: sleepHoursVal,
             );
           } catch (_) {
             AppSnackbar.error(

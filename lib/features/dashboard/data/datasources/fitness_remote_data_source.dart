@@ -50,7 +50,7 @@ class FitnessRemoteDataSource {
 
   // 2. OPTIMIZATION: ONE-TIME FETCH FOR HISTORICAL CHART DATA
   // Replaces the open snapshot stream that caused 5 reads per click.
-// 1. One-time fetch for 5-day chart data with optional server bypass
+  // 1. One-time fetch for 5-day chart data with optional server bypass
   Future<List<DailyRecordModel>> fetchPastRecords({
     int days = 5,
     bool forceRefresh = false,
@@ -68,7 +68,9 @@ class FitnessRemoteDataSource {
 
       if (forceRefresh) {
         // User explicitly pulled to refresh: query server directly
-        snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+        snapshot = await query.get(
+          const GetOptions(source: Source.serverAndCache),
+        );
       } else {
         // Normal launch: attempt zero-cost cache read first
         try {
@@ -77,7 +79,9 @@ class FitnessRemoteDataSource {
             snapshot = await query.get(const GetOptions(source: Source.server));
           }
         } catch (_) {
-          snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+          snapshot = await query.get(
+            const GetOptions(source: Source.serverAndCache),
+          );
         }
       }
 
@@ -112,7 +116,9 @@ class FitnessRemoteDataSource {
 
       if (forceRefresh) {
         // Force server fetch on pull-to-refresh
-        snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+        snapshot = await query.get(
+          const GetOptions(source: Source.serverAndCache),
+        );
       } else {
         // Standard launch: cache first
         try {
@@ -121,7 +127,9 @@ class FitnessRemoteDataSource {
             snapshot = await query.get(const GetOptions(source: Source.server));
           }
         } catch (_) {
-          snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+          snapshot = await query.get(
+            const GetOptions(source: Source.serverAndCache),
+          );
         }
       }
 
@@ -134,16 +142,27 @@ class FitnessRemoteDataSource {
   }
 
   // 3. LOG HEALTH METRICS (Single targeted document merge write)
-  Future<void> logHealthMetrics({required int bpm, required int weight}) async {
+  /// Saves user-logged health metrics including distance and sleep to today's record
+  Future<void> logHealthMetrics({
+    required int bpm,
+    required int weight,
+    double? runningKm,
+    int? sleepHours,
+  }) async {
     final uid = _uid;
     if (uid == null) return;
 
     final docRef = _userDoc(uid).collection('daily_records').doc(_todayKey);
-    await docRef.set({
+    final data = <String, dynamic>{
       'bpm': bpm,
       'weight': weight,
       'dateKey': _todayKey,
-    }, SetOptions(merge: true));
+    };
+
+    if (runningKm != null) data['runningKm'] = runningKm;
+    if (sleepHours != null) data['sleepHours'] = sleepHours;
+
+    await docRef.set(data, SetOptions(merge: true));
   }
 
   // 4. ATOMIC GOAL TOGGLE (Batch write: 1 round-trip network payload)

@@ -56,8 +56,10 @@ class StatisticsController extends GetxController {
     _bindTodayStream();
   }
 
-  Future<void> _loadStatistics() async {
-    final records = await _dataSource.fetchCurrentWeekRecords();
+Future<void> _loadStatistics({bool forceRefresh = false}) async {
+    final records = await _dataSource.fetchCurrentWeekRecords(
+      forceRefresh: forceRefresh,
+    );
 
     int totalTasks = 0;
     int caloriesSum = 0;
@@ -66,7 +68,7 @@ class StatisticsController extends GetxController {
     for (final record in records) {
       try {
         final recordDate = DateFormat('yyyy-MM-dd').parse(record.dateKey);
-        final dayIndex = recordDate.weekday - 1; // 0 for Monday, 6 for Sunday
+        final dayIndex = recordDate.weekday - 1;
         if (dayIndex >= 0 && dayIndex < 7) {
           dayKcal[dayIndex] = record.kcalBurned.toDouble();
         }
@@ -79,6 +81,11 @@ class StatisticsController extends GetxController {
     totalActivity.value = totalTasks;
     weeklyCalories.value = caloriesSum;
     weeklyDailyKcal.assignAll(dayKcal);
+  }
+
+  /// Triggered by pull-to-refresh on StatisticsScreen
+  Future<void> refreshStatistics() async {
+    await _loadStatistics(forceRefresh: true);
   }
 
   void _bindTodayStream() {

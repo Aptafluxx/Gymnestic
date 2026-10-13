@@ -15,68 +15,77 @@ class HomeScreen extends GetView<HomeController> {
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
       bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 20),
-            sliver: SliverList.list(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Obx(
-                        () => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome, ${controller.userName.value} !',
-                              style: const TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w600,
+      child: RefreshIndicator(
+        color: AppColors.primaryRed,
+        backgroundColor: AppColors.cardDark,
+        displacement: 30,
+        onRefresh: controller.refreshData,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 20),
+              sliver: SliverList.list(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Obx(
+                          () => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome, ${controller.userName.value} !',
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              controller.currentDate.value,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.grayLight,
+                              const SizedBox(height: 4),
+                              Text(
+                                controller.currentDate.value,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.grayLight,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.more_vert),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                _StatusCard(controller: controller),
-                const SizedBox(height: 25),
-                const SectionHeading(
-                  title: 'Activity',
-                  subtitle: 'Choose your program',
-                ),
-                const SizedBox(height: 14),
-                Obx(
-                  () => Column(
-                    children: controller.programs
-                        .map(
-                          (program) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ActivityCard(program: program),
-                          ),
-                        )
-                        .toList(),
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.more_vert),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 18),
+                  _StatusCard(controller: controller),
+                  const SizedBox(height: 25),
+                  const SectionHeading(
+                    title: 'Activity',
+                    subtitle: 'Choose your program',
+                  ),
+                  const SizedBox(height: 14),
+                  Obx(
+                    () => Column(
+                      children: controller.programs
+                          .map(
+                            (program) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ActivityCard(program: program),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );

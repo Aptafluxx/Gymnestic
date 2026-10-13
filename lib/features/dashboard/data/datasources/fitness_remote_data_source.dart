@@ -50,7 +50,11 @@ class FitnessRemoteDataSource {
 
   // 2. OPTIMIZATION: ONE-TIME FETCH FOR HISTORICAL CHART DATA
   // Replaces the open snapshot stream that caused 5 reads per click.
-  Future<List<DailyRecordModel>> fetchPastRecords({int days = 5}) async {
+// 1. One-time fetch for 5-day chart data with optional server bypass
+  Future<List<DailyRecordModel>> fetchPastRecords({
+    int days = 5,
+    bool forceRefresh = false,
+  }) async {
     final uid = _uid;
     if (uid == null) return const [];
 
@@ -60,17 +64,21 @@ class FitnessRemoteDataSource {
           .orderBy('dateKey', descending: true)
           .limit(days);
 
-      // Attempt to load from device cache first ($0.00 cost)
       QuerySnapshot<Map<String, dynamic>> snapshot;
-      try {
-        snapshot = await query.get(const GetOptions(source: Source.cache));
-        if (snapshot.docs.isEmpty) {
-          snapshot = await query.get(const GetOptions(source: Source.server));
+
+      if (forceRefresh) {
+        // User explicitly pulled to refresh: query server directly
+        snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+      } else {
+        // Normal launch: attempt zero-cost cache read first
+        try {
+          snapshot = await query.get(const GetOptions(source: Source.cache));
+          if (snapshot.docs.isEmpty) {
+            snapshot = await query.get(const GetOptions(source: Source.server));
+          }
+        } catch (_) {
+          snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
         }
-      } catch (_) {
-        snapshot = await query.get(
-          const GetOptions(source: Source.serverAndCache),
-        );
       }
 
       final records = snapshot.docs
@@ -83,14 +91,15 @@ class FitnessRemoteDataSource {
     }
   }
 
-  /// Fetches the current week's daily records (Mon-Sun) using cache-first strategy
-  Future<List<DailyRecordModel>> fetchCurrentWeekRecords() async {
+  // 2. Fetch current week's records with optional server bypass
+  Future<List<DailyRecordModel>> fetchCurrentWeekRecords({
+    bool forceRefresh = false,
+  }) async {
     final uid = _uid;
     if (uid == null) return const [];
 
     try {
       final now = DateTime.now();
-      // Calculate start of current week (Monday)
       final monday = now.subtract(Duration(days: now.weekday - 1));
       final mondayKey = DateFormat('yyyy-MM-dd').format(monday);
 
@@ -100,15 +109,20 @@ class FitnessRemoteDataSource {
           .orderBy('dateKey', descending: false);
 
       QuerySnapshot<Map<String, dynamic>> snapshot;
-      try {
-        snapshot = await query.get(const GetOptions(source: Source.cache));
-        if (snapshot.docs.isEmpty) {
-          snapshot = await query.get(const GetOptions(source: Source.server));
+
+      if (forceRefresh) {
+        // Force server fetch on pull-to-refresh
+        snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
+      } else {
+        // Standard launch: cache first
+        try {
+          snapshot = await query.get(const GetOptions(source: Source.cache));
+          if (snapshot.docs.isEmpty) {
+            snapshot = await query.get(const GetOptions(source: Source.server));
+          }
+        } catch (_) {
+          snapshot = await query.get(const GetOptions(source: Source.serverAndCache));
         }
-      } catch (_) {
-        snapshot = await query.get(
-          const GetOptions(source: Source.serverAndCache),
-        );
       }
 
       return snapshot.docs

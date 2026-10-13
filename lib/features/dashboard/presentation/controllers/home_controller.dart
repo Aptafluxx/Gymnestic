@@ -102,15 +102,21 @@ class HomeController extends GetxController {
   }
 
   // OPTIMIZATION: Fetches historical chart spots once without lingering listeners
-  Future<void> loadPastRecords() async {
-    final records = await _dataSource.fetchPastRecords(days: 5);
+/// One-time fetch for historical days with optional cache bypass
+  Future<void> loadPastRecords({bool forceRefresh = false}) async {
+    final records = await _dataSource.fetchPastRecords(
+      days: 5,
+      forceRefresh: forceRefresh,
+    );
+
     if (records.isEmpty) {
-      statusChartSpots.assignAll(const [
-        FlSpot(0, 0),
-        FlSpot(1, 0),
-        FlSpot(2, 0),
-        FlSpot(3, 0),
-        FlSpot(4, 0),
+      final todayScaledY = (kcalBurned.value / 100.0).clamp(0.0, 6.0);
+      statusChartSpots.assignAll([
+        const FlSpot(0, 0),
+        const FlSpot(1, 0),
+        const FlSpot(2, 0),
+        const FlSpot(3, 0),
+        FlSpot(4, todayScaledY),
       ]);
       return;
     }
@@ -125,7 +131,16 @@ class HomeController extends GetxController {
       spots.add(FlSpot(spots.length.toDouble(), 0));
     }
 
+    final todayScaledY = (kcalBurned.value / 100.0).clamp(0.0, 6.0);
+    spots[spots.length - 1] = FlSpot(4, todayScaledY);
+
     statusChartSpots.assignAll(spots);
+  }
+
+  /// Triggered by pull-to-refresh gesture on HomeScreen
+  Future<void> refreshData() async {
+    _loadUserInfo();
+    await loadPastRecords(forceRefresh: true);
   }
 
   void openLogMetricsDialog() {

@@ -22,85 +22,94 @@ class StatisticsScreen extends GetView<StatisticsController> {
           IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOverallProgressCard(),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSubMetricCard(
-                    icon: Icons.directions_run_rounded,
-                    title: Obx(
-                      () => Text(
-                        '${controller.runningKm.value.toInt()} / ${controller.targetRunningKm.value.toInt()} Km',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+      body: RefreshIndicator(
+        color: AppColors.primaryRed,
+        backgroundColor: AppColors.cardDark,
+        displacement: 20,
+        onRefresh: controller.refreshStatistics,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOverallProgressCard(),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSubMetricCard(
+                      icon: Icons.directions_run_rounded,
+                      title: Obx(
+                        () => Text(
+                          '${controller.runningKm.value.toInt()} / ${controller.targetRunningKm.value.toInt()} Km',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
-                    ),
-                    subtitle: 'Calories Burned',
-                    kcalText: Obx(
-                      () => Text(
-                        '${controller.runningKcal.value} KCAL',
-                        style: const TextStyle(
-                          color: AppColors.primaryRed,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: _buildSubMetricCard(
-                    icon: Icons.nightlight_round,
-                    title: Obx(
-                      () => Text(
-                        '${controller.sleepHours.value} / ${controller.targetSleepHours.value} hrs',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    subtitle: 'Calories Burned',
-                    kcalText: Obx(
-                      () => Text(
-                        '${controller.sleepKcal.value} KCAL',
-                        style: const TextStyle(
-                          color: AppColors.primaryRed,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                      subtitle: 'Calories Burned',
+                      kcalText: Obx(
+                        () => Text(
+                          '${controller.runningKcal.value} KCAL',
+                          style: const TextStyle(
+                            color: AppColors.primaryRed,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Monitoring',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textWhite,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildSubMetricCard(
+                      icon: Icons.nightlight_round,
+                      title: Obx(
+                        () => Text(
+                          '${controller.sleepHours.value} / ${controller.targetSleepHours.value} hrs',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      subtitle: 'Calories Burned',
+                      kcalText: Obx(
+                        () => Text(
+                          '${controller.sleepKcal.value} KCAL',
+                          style: const TextStyle(
+                            color: AppColors.primaryRed,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Daily progress',
-              style: TextStyle(fontSize: 12, color: AppColors.grayLight),
-            ),
-            const SizedBox(height: 20),
-            _buildMonitoringBarChart(),
-          ],
+              const SizedBox(height: 28),
+              const Text(
+                'Monitoring',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textWhite,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Daily progress',
+                style: TextStyle(fontSize: 12, color: AppColors.grayLight),
+              ),
+              const SizedBox(height: 20),
+              _buildMonitoringBarChart(),
+            ],
+          ),
         ),
       ),
     );

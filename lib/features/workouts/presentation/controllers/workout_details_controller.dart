@@ -9,6 +9,7 @@ import '../../../dashboard/data/models/activity_program_model.dart';
 class WorkoutDetailsController extends GetxController {
   final FitnessRemoteDataSource _dataSource = FitnessRemoteDataSource();
 
+  // Active Program Details
   final Rx<ActivityProgramModel> activeProgram = const ActivityProgramModel(
     id: 'beginner',
     title: 'Training for Beginner',
@@ -18,16 +19,22 @@ class WorkoutDetailsController extends GetxController {
   ).obs;
 
   final RxString selectedGender = 'Male'.obs;
-  final RxList<DailyGoalModel> allGoals = <DailyGoalModel>[].obs;
+
+  // Master list of raw goal templates
+  final RxList<DailyGoalModel> rawGoals = <DailyGoalModel>[].obs;
+
+  // Today's completed goal IDs (e.g. ['beg-push-ups'])
+  final RxList<String> todayCompletedIds = <String>[].obs;
 
   StreamSubscription? _goalsSubscription;
+  StreamSubscription? _todaySubscription;
 
   @override
   void onInit() {
     super.onInit();
     _extractProgramArguments();
     _loadGender();
-    _bindGoalsStream();
+    _bindStreams();
   }
 
   void _extractProgramArguments() {
@@ -36,28 +43,43 @@ class WorkoutDetailsController extends GetxController {
     }
   }
 
-  // OPTIMIZATION: One-time gender fetch instead of an open snapshot listener
   Future<void> _loadGender() async {
     selectedGender.value = await _dataSource.getGenderPreference();
   }
 
-  void _bindGoalsStream() {
+  void _bindStreams() {
+    // 1. Listen to today's daily record to see what is completed TODAY
+    _todaySubscription?.cancel();
+    _todaySubscription = _dataSource.streamTodayRecord().listen((record) {
+      todayCompletedIds.assignAll(record.completedGoalIds);
+    });
+
+    // 2. Stream goal templates for the active program
     _goalsSubscription?.cancel();
     _goalsSubscription = _dataSource
         .streamDailyGoals(programId: activeProgram.value.id)
         .listen((goals) {
-          allGoals.assignAll(goals);
+          rawGoals.assignAll(goals);
         });
   }
 
+  /// Evaluates each goal against TODAY'S completed IDs
   List<DailyGoalModel> get dailyGoals {
-    return allGoals.where((goal) {
-      return goal.gender == 'All' || goal.gender == selectedGender.value;
-    }).toList();
+    return rawGoals
+        .where(
+          (goal) => goal.gender == 'All' || goal.gender == selectedGender.value,
+        )
+        .map((goal) {
+          // A goal is completed IF AND ONLY IF today's record contains its ID
+          final isDoneToday = todayCompletedIds.contains(goal.id);
+          return goal.copyWith(isCompleted: isDoneToday);
+        })
+        .toList();
   }
 
   int get completedGoalsCount =>
       dailyGoals.where((goal) => goal.isCompleted).length;
+
   int get totalGoalsCount => dailyGoals.length;
 
   Future<void> setGender(String gender) async {
@@ -67,25 +89,29 @@ class WorkoutDetailsController extends GetxController {
     }
   }
 
+  /// Toggles completion status for today
   Future<void> toggleGoalStatus(String id) async {
-    final goal = allGoals.firstWhereOrNull((g) => g.id == id);
+    final goal = rawGoals.firstWhereOrNull((g) => g.id == id);
     if (goal == null) return;
 
-    final newStatus = !goal.isCompleted;
+    final isCurrentlyCompleted = todayCompletedIds.contains(id);
+    final newStatus = !isCurrentlyCompleted;
 
-    // Optimistic UI update for immediate screen response
-    final index = allGoals.indexWhere((g) => g.id == id);
-    if (index != -1) {
-      allGoals[index] = goal.copyWith(isCompleted: newStatus);
+    // Optimistic UI update for instantaneous visual feedback
+    if (newStatus) {
+      todayCompletedIds.add(id);
+    } else {
+      todayCompletedIds.remove(id);
     }
 
-    // Atomic write in Firestore
+    // Persist change to today's record in Firestore
     await _dataSource.toggleGoalCompletion(goal: goal, isCompleted: newStatus);
   }
 
   @override
   void onClose() {
     _goalsSubscription?.cancel();
+    _todaySubscription?.cancel();
     super.onClose();
   }
 }

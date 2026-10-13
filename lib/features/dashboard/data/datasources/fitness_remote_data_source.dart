@@ -133,6 +133,7 @@ class FitnessRemoteDataSource {
   }
 
   // 4. ATOMIC GOAL TOGGLE (Batch write: 1 round-trip network payload)
+  /// Updates task state ONLY in today's daily record without modifying the master template
   Future<void> toggleGoalCompletion({
     required DailyGoalModel goal,
     required bool isCompleted,
@@ -140,27 +141,23 @@ class FitnessRemoteDataSource {
     final uid = _uid;
     if (uid == null) return;
 
-    final batch = _firestore.batch();
-    final goalRef = _userDoc(uid).collection('daily_goals').doc(goal.id);
     final recordRef = _userDoc(uid).collection('daily_records').doc(_todayKey);
 
-    batch.update(goalRef, {'isCompleted': isCompleted});
-
     if (isCompleted) {
-      batch.set(recordRef, {
+      // Add goal ID to today's completed list and add calories
+      await recordRef.set({
         'dateKey': _todayKey,
         'kcalBurned': FieldValue.increment(goal.calorieReward),
         'completedGoalIds': FieldValue.arrayUnion([goal.id]),
       }, SetOptions(merge: true));
     } else {
-      batch.set(recordRef, {
+      // Remove goal ID from today's completed list and subtract calories
+      await recordRef.set({
         'dateKey': _todayKey,
         'kcalBurned': FieldValue.increment(-goal.calorieReward),
         'completedGoalIds': FieldValue.arrayRemove([goal.id]),
       }, SetOptions(merge: true));
     }
-
-    await batch.commit();
   }
 
   // 5. STREAM DAILY GOALS (Only reads for the specific active programId)

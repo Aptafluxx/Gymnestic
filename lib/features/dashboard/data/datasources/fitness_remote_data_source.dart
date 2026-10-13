@@ -83,6 +83,42 @@ class FitnessRemoteDataSource {
     }
   }
 
+  /// Fetches the current week's daily records (Mon-Sun) using cache-first strategy
+  Future<List<DailyRecordModel>> fetchCurrentWeekRecords() async {
+    final uid = _uid;
+    if (uid == null) return const [];
+
+    try {
+      final now = DateTime.now();
+      // Calculate start of current week (Monday)
+      final monday = now.subtract(Duration(days: now.weekday - 1));
+      final mondayKey = DateFormat('yyyy-MM-dd').format(monday);
+
+      final query = _userDoc(uid)
+          .collection('daily_records')
+          .where('dateKey', isGreaterThanOrEqualTo: mondayKey)
+          .orderBy('dateKey', descending: false);
+
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      try {
+        snapshot = await query.get(const GetOptions(source: Source.cache));
+        if (snapshot.docs.isEmpty) {
+          snapshot = await query.get(const GetOptions(source: Source.server));
+        }
+      } catch (_) {
+        snapshot = await query.get(
+          const GetOptions(source: Source.serverAndCache),
+        );
+      }
+
+      return snapshot.docs
+          .map((doc) => DailyRecordModel.fromMap(doc.id, doc.data()))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   // 3. LOG HEALTH METRICS (Single targeted document merge write)
   Future<void> logHealthMetrics({required int bpm, required int weight}) async {
     final uid = _uid;

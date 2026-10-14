@@ -57,7 +57,7 @@ class HomeScreen extends GetView<HomeController> {
                       ),
                       IconButton(
                         onPressed: () {},
-                        icon: const Icon(Icons.more_vert),
+                        icon: const Icon(Icons.logout),
                       ),
                     ],
                   ),

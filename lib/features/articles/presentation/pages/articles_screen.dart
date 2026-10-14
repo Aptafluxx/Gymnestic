@@ -26,9 +26,6 @@ class ArticlesScreen extends GetView<ArticlesController> {
         icon: const Icon(Icons.arrow_back_ios_new, size: 19),
       ),
       title: const SizedBox.shrink(),
-      actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.search_rounded)),
-      ],
     ),
     body: SafeArea(
       top: false,

@@ -18,9 +18,6 @@ class StatisticsScreen extends GetView<StatisticsController> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 19),
           onPressed: () => Get.back(),
         ),
-        actions: [
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-        ],
       ),
       body: RefreshIndicator(
         color: AppColors.primaryRed,

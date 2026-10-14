@@ -12,16 +12,16 @@ class DashboardShellScreen extends GetView<DashboardController> {
 
   static const _pages = <Widget>[
     HomeScreen(),
-    ProfileScreen(),
-    ArticlesScreen(),
     StatisticsScreen(),
+    ArticlesScreen(),
+    ProfileScreen(),
   ];
 
   static const _items = <_NavigationItem>[
     _NavigationItem(Icons.home_filled, 'Home'),
-    _NavigationItem(Icons.person, 'Profile'),
-    _NavigationItem(Icons.menu_book_rounded, 'Articles'),
     _NavigationItem(Icons.bar_chart_rounded, 'Statistics'),
+    _NavigationItem(Icons.menu_book_rounded, 'Articles'),
+    _NavigationItem(Icons.person, 'Profile'),
   ];
 
   @override

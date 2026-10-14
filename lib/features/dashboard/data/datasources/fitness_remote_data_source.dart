@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:gymnestic/features/profile/data/models/user_profile_model.dart';
 import 'package:intl/intl.dart';
 
 import '../models/daily_record_model.dart';
@@ -362,4 +363,39 @@ class FitnessRemoteDataSource {
       calorieReward: 15,
     ),
   ];
+
+  /// Streams the user's profile document and initializes it with real Auth data if missing
+  Stream<UserProfileModel> streamUserProfile() {
+    final uid = _uid;
+    if (uid == null) return Stream.value(UserProfileModel.initial());
+
+    final docRef = _userDoc(uid).collection('profile').doc('current');
+
+    return docRef.snapshots(includeMetadataChanges: false).map((snapshot) {
+      if (!snapshot.exists || snapshot.data() == null) {
+        // Extract real name or email prefix from Firebase Auth
+        final user = _auth.currentUser;
+        final displayName = user?.displayName?.trim();
+        final emailPrefix = user?.email?.split('@').first.trim();
+        final actualName = displayName?.isNotEmpty == true
+            ? displayName
+            : emailPrefix;
+
+        // Generate profile with their actual name
+        final initialProfile = UserProfileModel.initial(authName: actualName);
+
+        docRef.set(initialProfile.toMap(), SetOptions(merge: true));
+        return initialProfile;
+      }
+      return UserProfileModel.fromMap(snapshot.data()!);
+    });
+  }
+
+  Future<void> updateUserProfile(Map<String, dynamic> updates) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final docRef = _userDoc(uid).collection('profile').doc('current');
+    await docRef.set(updates, SetOptions(merge: true));
+  }
 }

@@ -7,6 +7,7 @@ import 'package:gymnestic/core/widgets/gym_image.dart';
 import 'package:gymnestic/core/widgets/section_heading.dart';
 import 'package:gymnestic/features/dashboard/presentation/controllers/home_controller.dart';
 import 'package:gymnestic/features/dashboard/data/models/activity_program_model.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -56,7 +57,10 @@ class HomeScreen extends GetView<HomeController> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () => Get.dialog<void>(
+                          _LogoutConfirmationDialog(controller: controller),
+                          barrierDismissible: false,
+                        ),
                         icon: const Icon(Icons.logout),
                       ),
                     ],
@@ -88,6 +92,80 @@ class HomeScreen extends GetView<HomeController> {
         ),
       ),
     ),
+  );
+}
+
+class _LogoutConfirmationDialog extends StatelessWidget {
+  const _LogoutConfirmationDialog({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    backgroundColor: AppColors.cardDark,
+    title: Text(
+      'Logout',
+      style: Theme.of(context).textTheme.titleLarge
+          ?.copyWith(fontWeight: .w700, color: AppColors.textWhite),
+      textAlign: TextAlign.center,
+    ),
+    content: Text(
+      'Are you sure you want to log out of your account?',
+      style: Theme.of(context).textTheme.bodyMedium
+          ?.copyWith(color: AppColors.textMuted, height: 1.4),
+      textAlign: .center,
+    ),
+    actions: [
+      Row(
+        children: [
+          Obx(
+            () => Expanded(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  side: const BorderSide(
+                    color: AppColors.grayMedium,
+                    width: 1.2,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                onPressed: controller.isLoggingOut.value
+                    ? null
+                    : Get.back<void>,
+                child: Text(
+                  'Cancel',
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(fontWeight: .w700),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+          Obx(
+            () => Expanded(
+              child: ElevatedButton(
+                onPressed: controller.isLoggingOut.value
+                    ? null
+                    : controller.logOut,
+                style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
+                child: controller.isLoggingOut.value
+                    ? LoadingAnimationWidget.threeArchedCircle(
+                        color: AppColors.textWhite,
+                        size: 20,
+                      )
+                    : Text(
+                        'Log out',
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(fontWeight: .w700),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ],
   );
 }
 

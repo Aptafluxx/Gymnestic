@@ -4,7 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:gymnestic/core/errors/auth_exceptions.dart';
+import 'package:gymnestic/core/routes/app_routes.dart';
 import 'package:gymnestic/core/widgets/app_snackbar.dart';
+import 'package:gymnestic/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:gymnestic/features/dashboard/data/datasources/fitness_remote_data_source.dart';
 import 'package:gymnestic/features/dashboard/data/models/activity_program_model.dart';
 import 'package:gymnestic/features/dashboard/data/models/daily_record_model.dart';
@@ -19,6 +22,7 @@ class HomeController extends GetxController {
 
   final RxString userName = 'Athlete'.obs;
   final RxString currentDate = ''.obs;
+  final RxBool isLoggingOut = false.obs;
 
   final RxInt bpm = 70.obs;
   final RxInt kcalBurned = 0.obs;
@@ -141,6 +145,29 @@ class HomeController extends GetxController {
   Future<void> refreshData() async {
     _loadUserInfo();
     await loadPastRecords(forceRefresh: true);
+  }
+
+  Future<void> logOut() async {
+    if (isLoggingOut.value) return;
+
+    isLoggingOut.value = true;
+    try {
+      await Get.find<SignOutUseCase>()();
+      Get.offAllNamed(AppRoutes.login);
+      AppSnackbar.success(
+        'Logged out',
+        'You have been logged out successfully.',
+      );
+    } on AuthException catch (exception) {
+      AppSnackbar.error('Logout failed', exception.message);
+    } catch (_) {
+      AppSnackbar.error(
+        'Logout failed',
+        'Something went wrong. Please try again.',
+      );
+    } finally {
+      isLoggingOut.value = false;
+    }
   }
 
   void openLogMetricsDialog() {

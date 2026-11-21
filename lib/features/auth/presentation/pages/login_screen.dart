@@ -145,7 +145,7 @@ class LoginScreen extends GetView<LoginController> {
                       Get.offAllNamed(AppRoutes.signup);
                     },
                     child: Text(
-                      'Have an Account? Login',
+                      "Don't have an account? Sign up",
                       style: textTheme.bodyMedium?.copyWith(
                         fontWeight: .w500,
                         decoration: .underline,

@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/widgets/app_text_field.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';

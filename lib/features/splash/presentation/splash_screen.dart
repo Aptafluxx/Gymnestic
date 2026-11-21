@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/features/splash/controller/splash_controller.dart';
 import 'package:gymnestic/features/splash/presentation/widgets/dashed_curve_painter.dart';

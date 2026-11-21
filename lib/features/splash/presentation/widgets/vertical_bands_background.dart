@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:gymnestic/core/theme/app_colors.dart';
 
 class VerticalBandsBackground extends StatelessWidget {

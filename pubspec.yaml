@@ -21,6 +21,7 @@ dependencies:
   intl: ^0.20.3
   cloud_firestore: ^6.10.0
 
+  material_ui: any
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gymnestic/core/services/preferences_service.dart';
@@ -30,14 +30,15 @@ class Gymnestic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'GYMNESTIC',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
-      initialRoute: AppRoutes.splash,
-      getPages: AppPages.pages,
-      initialBinding: InitialBinding(),
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: GetMaterialApp(
+        title: 'GYMNESTIC',
+        debugShowCheckedModeBanner: false,
+        initialRoute: AppRoutes.splash,
+        getPages: AppPages.pages,
+        initialBinding: InitialBinding(),
+      ),
     );
   }
 }

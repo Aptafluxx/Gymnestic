@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/routes/app_pages.dart';
@@ -11,10 +11,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      GetMaterialApp(
-        theme: AppTheme.darkTheme,
-        initialRoute: AppRoutes.home,
-        getPages: AppPages.pages,
+      Theme(
+        data: AppTheme.darkTheme,
+        child: GetMaterialApp(
+          initialRoute: AppRoutes.home,
+          getPages: AppPages.pages,
+        ),
       ),
     );
     await tester.pumpAndSettle();

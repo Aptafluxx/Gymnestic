@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:gymnestic/core/theme/app_colors.dart';
 import 'package:gymnestic/core/widgets/gym_image.dart';
